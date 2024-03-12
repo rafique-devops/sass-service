@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { CreateGinesyDto } from './dto/create-ginesy.dto';
-import { UpdateGinesyDto } from './dto/update-ginesy.dto';
+import { CreateGinesysDto } from './dto/create-ginesys.dto';
+import { UpdateGinesysDto } from './dto/update-ginesys.dto';
 
 @Injectable()
 export class GinesysService {
-  create(createGinesyDto: CreateGinesyDto) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  create(createGinesyDto: CreateGinesysDto) {
     return 'This action adds a new ginesy';
   }
 
@@ -16,7 +17,8 @@ export class GinesysService {
     return `This action returns a #${id} ginesy`;
   }
 
-  update(id: number, updateGinesyDto: UpdateGinesyDto) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  update(id: number, updateGinesyDto: UpdateGinesysDto) {
     return `This action updates a #${id} ginesy`;
   }
 

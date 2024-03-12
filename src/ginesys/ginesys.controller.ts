@@ -1,15 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { GinesysService } from './ginesys.service';
-import { CreateGinesyDto } from './dto/create-ginesy.dto';
-import { UpdateGinesyDto } from './dto/update-ginesy.dto';
+import { CreateGinesysDto } from './dto/create-ginesys.dto';
+import { UpdateGinesysDto } from './dto/update-ginesys.dto';
 
 @Controller('ginesys')
 export class GinesysController {
   constructor(private readonly ginesysService: GinesysService) {}
 
   @Post()
-  create(@Body() createGinesyDto: CreateGinesyDto) {
-    return this.ginesysService.create(createGinesyDto);
+  create(@Body() createGinesysDto: CreateGinesysDto) {
+    return this.ginesysService.create(createGinesysDto);
   }
 
   @Get()
@@ -23,12 +33,18 @@ export class GinesysController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateGinesyDto: UpdateGinesyDto) {
-    return this.ginesysService.update(+id, updateGinesyDto);
+  update(@Param('id') id: string, @Body() updateGinesysDto: UpdateGinesysDto) {
+    return this.ginesysService.update(+id, updateGinesysDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.ginesysService.remove(+id);
+  }
+
+  @Post('item-master')
+  @HttpCode(HttpStatus.OK)
+  processJson(@Body() jsonData: JSON): JSON {
+    return jsonData;
   }
 }
