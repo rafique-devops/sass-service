@@ -27,7 +27,7 @@ export class GinesysService {
       const response = await lastValueFrom(
         this.httpService.post(url, createGinesysDto, { headers }),
       );
-      Logger.log(response);
+      Logger.log(`CreatedModifyItems Response: ${JSON.stringify(response)}`);
       return response;
     } catch (error) {
       Logger.log(`Failed to create/modify items: ${error}`);
@@ -44,11 +44,14 @@ export class GinesysService {
       const response = await lastValueFrom(
         this.httpService.post(url, { checkerId }, { headers }),
       );
-      Logger.log(response);
+      Logger.log(`Checker Response: ${JSON.stringify(response)}`);
       return response;
     } catch (error) {
-      Logger.log(`Failed to update: ${error}`);
-      throw new Error(`Failed to update: ${error}`);
+      if (error.response && error.response.status === 404) {
+        throw new Error('Resource Not Found');
+      } else {
+        throw new Error(`Failed to update: ${error}`);
+      }
     }
   }
 }
