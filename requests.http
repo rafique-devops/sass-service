@@ -1,5 +1,5 @@
 
-POST http://localhost:3000/api/ginesys/itemMaster
+POST http://localhost:3000/ginesys/item-master
 Content-Type: application/json
 
 {
@@ -9,7 +9,7 @@ Content-Type: application/json
 
 ###
 
-POST http://localhost:3000/api/ginesys/inventory
+POST http://localhost:3000/ginesys/inventory
 Content-Type: application/json
 
 {
@@ -19,7 +19,7 @@ Content-Type: application/json
 
 ###
 
-POST http://localhost:3000/api/ginesys/onlineInvoice
+POST http://localhost:3000/ginesys/online-invoice
 Content-Type: application/json
 
 {
@@ -29,7 +29,7 @@ Content-Type: application/json
 
 ###
 
-POST http://localhost:3000/api/ginesys/posBill
+POST http://localhost:3000/ginesys/pos-bill
 Content-Type: application/json
 
 {
