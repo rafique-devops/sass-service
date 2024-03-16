@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { OptcultureService } from './optculture.service';
 import { CreateOptcultureDto } from './dto/create-optculture.dto';
 import { UpdateOptcultureDto } from './dto/update-optculture.dto';
@@ -23,7 +31,10 @@ export class OptcultureController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOptcultureDto: UpdateOptcultureDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateOptcultureDto: UpdateOptcultureDto,
+  ) {
     return this.optcultureService.update(+id, updateOptcultureDto);
   }
 

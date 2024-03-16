@@ -1,0 +1,38 @@
+
+POST http://localhost:3000/api/ginesys/itemMaster
+Content-Type: application/json
+
+{
+    "username":"Rafique1",
+    "password":"Rafique123"
+}
+
+###
+
+POST http://localhost:3000/api/ginesys/inventory
+Content-Type: application/json
+
+{
+    "username":"Rafique2",
+    "password":"Rafique123"
+}
+
+###
+
+POST http://localhost:3000/api/ginesys/onlineInvoice
+Content-Type: application/json
+
+{
+    "username":"Rafique3",
+    "password":"Rafique123"
+}
+
+###
+
+POST http://localhost:3000/api/ginesys/posBill
+Content-Type: application/json
+
+{
+    "username":"Rafique4",
+    "password":"Rafique123"
+}
