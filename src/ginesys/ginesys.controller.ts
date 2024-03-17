@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   HttpException,
+  Logger,
 } from '@nestjs/common';
 import { GinesysService } from './ginesys.service';
 import { CreateGinesysDto } from './dto/create-ginesys.dto';
@@ -15,18 +16,20 @@ export class GinesysController {
 
   @Post('/item-master')
   @HttpCode(HttpStatus.OK)
-  async processData(@Body() inputData: CreateGinesysDto) {
+  async createModifyItems(
+    @Body() inputData: CreateGinesysDto,
+  ): Promise<GinesysCreationResponse> {
     try {
+      Logger.log('Inside Controller', JSON.stringify(inputData, null, 2));
       const creationResponse =
         await this.ginesysService.createModifyItems(inputData);
-      // const checkerId = creationResponse.data.id;
-      // const updateResponse = await this.ginesysService.checkUpdate(checkerId);
-      // const responseData = {
-      //   checkerId: updateResponse.status,
-      //   updateMessage: updateResponse.data.message,
-      // };
-      // return responseData;
+      Logger.log(
+        'Creation Response',
+        JSON.stringify(creationResponse, null, 2),
+      );
+      // const checkerId = creationResponse.data.checkerId;
       return creationResponse;
+      // return { data: creationResponse.data, message: creationResponse.message };
     } catch (error: unknown) {
       if (error instanceof Error) {
         throw new HttpException(
@@ -43,7 +46,7 @@ export class GinesysController {
 
   @Post('checker')
   @HttpCode(HttpStatus.OK)
-  async checkUpdate(@Body() checkerData: { checkerId: string }) {
+  async checkUpdate(@Body() checkerData: { checkerId: number }): Promise<any> {
     try {
       const checkResponse = await this.ginesysService.checkUpdate(
         checkerData.checkerId,
