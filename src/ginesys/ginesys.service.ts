@@ -35,7 +35,6 @@ export class GinesysService {
 
   private prepareRequest(
     endpoint: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     data?: any,
   ): {
     url: string;
@@ -95,7 +94,10 @@ export class GinesysService {
       return creationResponse;
     } catch (error) {
       Logger.log(`Failed to create/modify items: ${error}`);
-      throw new Error(`Failed to create/modify items: ${error}`);
+      throw new HttpException(
+        `Failed to create/modify items: ${error}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
