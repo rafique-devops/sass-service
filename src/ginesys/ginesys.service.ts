@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -10,6 +11,7 @@ import { AxiosResponse } from 'axios';
 import { lastValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { CreateGinesysDto } from './dto/create-ginesys.dto';
+import { ItemPromotionDTO, PosBillRequestDTO, ReceiptPromotionDTO } from './dto/posbillRequest.dto';
 
 export interface GinesysCreationResponse {
   data: {
@@ -62,22 +64,13 @@ export class GinesysService {
     createGinesysDto: CreateGinesysDto,
   ): Promise<GinesysCreationResponse> {
     try {
-      Logger.log(
-        'Create Ginesys DTO',
-        JSON.stringify(createGinesysDto, null, 2),
-      );
       const { url, headers } = this.prepareRequest(
         'v2/createmodifyitembulk',
         createGinesysDto,
       );
-      Logger.log('URL', JSON.stringify(url, null, 2));
-      Logger.log('Headers', JSON.stringify(headers, null, 2));
       const response: AxiosResponse = await lastValueFrom(
         this.httpService.post(url, createGinesysDto, { headers }),
       );
-      Logger.log('Axios Headers', JSON.stringify(response.headers, null, 2));
-      Logger.log('Axios Status', JSON.stringify(response.status, null, 2));
-      Logger.log('Axios Data', JSON.stringify(response.data, null, 2));
       const creationResponse: GinesysCreationResponse = {
         data: response.data.data,
         message: response.data.message,
@@ -107,7 +100,6 @@ export class GinesysService {
       const response: AxiosResponse = await lastValueFrom(
         this.httpService.post(url, { checkerId }, { headers }),
       );
-      Logger.log(`Checker Response: ${JSON.stringify(response.status)}`);
       return response.data;
     } catch (error) {
       if (error.response && error.response.status === 404) {
@@ -116,5 +108,39 @@ export class GinesysService {
         throw new Error(`Failed to fetch: ${error}`);
       }
     }
+  }
+
+  async posBill(posbillData: PosBillRequestDTO): Promise<any> {
+    try {
+      if (!posbillData.OptcultureDetails?.MembershipNumber) {
+        throw new HttpException('Membership Number is Mandatory',HttpStatus.BAD_REQUEST)
+      }
+
+      const itemPromotion: ItemPromotionDTO[] = [];
+      const receiptPromotion: ReceiptPromotionDTO[] = [];
+      for (const promotion of posbillData.OptcultureDetails.Promotions)
+      {
+        switch (promotion.DiscountType) {
+          case 'Item':
+            itemPromotion.push(new ItemPromotionDTO());
+            break;
+
+          case 'Receipt':
+            receiptPromotion.push(new ReceiptPromotionDTO());
+            break;
+        
+          default:
+            throw new BadRequestException('Invalid Discount Type');
+        }
+      }
+      Logger.log('Response Data', JSON.stringify(posbillData, null, 2));
+      return {
+        success: true,
+        data: posbillData
+      };
+    } catch (error) {
+      Logger.log(`Something Went Wrong: ${error}`);
+      throw new HttpException(`${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    } 
   }
 }

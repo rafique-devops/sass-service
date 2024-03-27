@@ -6,9 +6,11 @@ import {
   HttpStatus,
   HttpException,
   Logger,
+  BadRequestException,
 } from '@nestjs/common';
 import { GinesysService } from './ginesys.service';
 import { CreateGinesysDto } from './dto/create-ginesys.dto';
+import { PosBillRequestDTO } from './dto/posbillRequest.dto';
 
 @Controller('ginesys')
 export class GinesysController {
@@ -20,16 +22,12 @@ export class GinesysController {
     @Body() inputData: CreateGinesysDto,
   ): Promise<GinesysCreationResponse> {
     try {
-      Logger.log('Inside Controller', JSON.stringify(inputData, null, 2));
       const creationResponse =
         await this.ginesysService.createModifyItems(inputData);
       Logger.log(
         'Creation Response',
-        JSON.stringify(creationResponse, null, 2),
-      );
-      // const checkerId = creationResponse.data.checkerId;
+        JSON.stringify(creationResponse, null, 2));      
       return creationResponse;
-      // return { data: creationResponse.data, message: creationResponse.message };
     } catch (error: unknown) {
       if (error instanceof Error) {
         throw new HttpException(
@@ -78,9 +76,24 @@ export class GinesysController {
     return jsonData;
   }
 
+// ... imports
+
   @Post('/pos-bill')
   @HttpCode(HttpStatus.OK)
-  posBill(@Body() jsonData: any) {
-    return jsonData;
+  async posBill(@Body() posbillData: PosBillRequestDTO) {
+    try {
+      const processedData = await this.ginesysService.posBill(posbillData);
+      return {
+        message: 'Success',
+        status: HttpStatus.OK,
+        data: processedData
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error; // Rethrow HttpExceptions directly
+      } else {
+        throw new HttpException('Failure', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
   }
 }
