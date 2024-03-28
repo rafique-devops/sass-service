@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty } from "class-validator";
+import { IsEmail, IsNotEmpty, MinLength, ValidateNested } from "class-validator";
 
 export class UserDTO {
     @IsNotEmpty()
@@ -70,20 +70,31 @@ export class OptcultureDetailsDTO {
     LoyaltyRedeemReversal?: string;
 
     @IsNotEmpty()
+    @ValidateNested({ each: true})
+    @MinLength(1)
     Promotions: PromotionDTO[];
 }
 
   export class PosBillRequestDTO {
     @IsNotEmpty()
+    @ValidateNested({ each: true})
     user: UserDTO;
+
+    @IsNotEmpty()
     requestTimestamp: string;
 
     @IsNotEmpty()
     requestType: string;
 
     @IsNotEmpty()
-    receiptType: string[];
+    receiptType: string;
 
     @IsNotEmpty()
+    @ValidateNested({ each: true})
     OptcultureDetails: OptcultureDetailsDTO;
+}
+
+export class PosBillResponse {
+    success: boolean;
+    data:PosBillRequestDTO;
 }

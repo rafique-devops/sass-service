@@ -11,7 +11,15 @@ import { AxiosResponse } from 'axios';
 import { lastValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { CreateGinesysDto } from './dto/create-ginesys.dto';
-import { ItemPromotionDTO, PosBillRequestDTO, ReceiptPromotionDTO } from './dto/posbillRequest.dto';
+import {
+  ItemPromotionDTO,
+  OptcultureDetailsDTO,
+  PosBillRequestDTO,
+  PosBillResponse,
+  PromotionDTO,
+  ReceiptPromotionDTO,
+  UserDTO,
+} from './dto/posbillRequest.dto';
 
 export interface GinesysCreationResponse {
   data: {
@@ -22,6 +30,15 @@ export interface GinesysCreationResponse {
     messageText: string;
   };
 }
+
+// export interface PosBillResponse {
+//   success: true;
+//   user: UserDTO;
+//   requestTimestamp: string;
+//   requestType: string;
+//   receiptType: string[];
+//   optcultureDetails: OptcultureDetailsDTO;
+// }
 
 @Injectable()
 export class GinesysService {
@@ -102,7 +119,7 @@ export class GinesysService {
       );
       return response.data;
     } catch (error) {
-      if (error.response && error.response.status === 404) {
+      if (error.response?.status === 404) {
         throw new NotFoundException('Resource Not Found');
       } else {
         throw new Error(`Failed to fetch: ${error}`);
@@ -110,37 +127,53 @@ export class GinesysService {
     }
   }
 
+  //POS-BILL Section starts from here
+  //private function to transform the json
+  private transformDataToItemPromotionDto(
+    promotions: PromotionDTO,
+  ): ItemPromotionDTO | ReceiptPromotionDTO {
+    if (promotions.DiscountType !== 'Item' && promotions.DiscountType !== 'Receipt') {
+      throw new BadRequestException('Invalid Discount Type');
+    }
+    if (promotions.DiscountType === 'Item' && (!promotions.ItemCode || !promotions.ItemDiscount || !promotions.QuantityDiscounted || !promotions.CouponCode || !promotions.DiscountAmount)) {
+      throw new BadRequestException('Invalid Promotion For Item Type');
+    }
+    if (promotions.DiscountType === 'Receipt' && (!promotions.CouponCode || !promotions.DiscountAmount)) {
+      throw new BadRequestException('Invalid Promotion For Receipt Type');
+    }
+    return promotions.DiscountType === 'Item' ? promotions as ItemPromotionDTO : promotions as ReceiptPromotionDTO;
+  }
+
+  // private function to validate the data
+  private posBillValidation(posbillData: PosBillRequestDTO) {
+    const { userName, token, organizationId } = posbillData.user;
+    const { MembershipNumber, Phone, Email } = posbillData.OptcultureDetails;
+
+    if (!userName || !token || !organizationId) {
+      throw new HttpException('Incorrect user details', HttpStatus.BAD_REQUEST);
+    } else if (!MembershipNumber || !Phone || !Email) {
+      throw new HttpException(
+        'Membership details are mandatory',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    posbillData.OptcultureDetails.Promotions.forEach(promotion => {
+      this.transformDataToItemPromotionDto(promotion);
+    })
+  }
+
   async posBill(posbillData: PosBillRequestDTO): Promise<any> {
     try {
-      if (!posbillData.OptcultureDetails?.MembershipNumber) {
-        throw new HttpException('Membership Number is Mandatory',HttpStatus.BAD_REQUEST)
-      }
-
-      const itemPromotion: ItemPromotionDTO[] = [];
-      const receiptPromotion: ReceiptPromotionDTO[] = [];
-      for (const promotion of posbillData.OptcultureDetails.Promotions)
-      {
-        switch (promotion.DiscountType) {
-          case 'Item':
-            itemPromotion.push(new ItemPromotionDTO());
-            break;
-
-          case 'Receipt':
-            receiptPromotion.push(new ReceiptPromotionDTO());
-            break;
-        
-          default:
-            throw new BadRequestException('Invalid Discount Type');
-        }
-      }
+      this.posBillValidation(posbillData);
       Logger.log('Response Data', JSON.stringify(posbillData, null, 2));
       return {
         success: true,
-        data: posbillData
+        data: posbillData,
       };
     } catch (error) {
-      Logger.log(`Something Went Wrong: ${error}`);
+      Logger.log(`Failed Processing at pos-bill: ${error}`,error.stack)
       throw new HttpException(`${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
-    } 
+    }
   }
 }

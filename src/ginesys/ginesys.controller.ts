@@ -83,11 +83,7 @@ export class GinesysController {
   async posBill(@Body() posbillData: PosBillRequestDTO) {
     try {
       const processedData = await this.ginesysService.posBill(posbillData);
-      return {
-        message: 'Success',
-        status: HttpStatus.OK,
-        data: processedData
-      };
+      return processedData;
     } catch (error) {
       if (error instanceof HttpException) {
         throw error; // Rethrow HttpExceptions directly
