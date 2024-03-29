@@ -122,13 +122,10 @@ export class GinesysService {
     }
   }
 
-  //POS-BILL Section starts from here
-  //private function to transform the json
   private transformDataToItemPromotionDto(
     promotionItem: PromotionDTO[],
   ): (ItemPromotionDTO | ReceiptPromotionDTO)[] {
-    const transformedPromotion = [];
-    for (const promotionItems of promotionItem) {
+    return promotionItem.map(promotionItems => {
       if (promotionItems.DiscountType !== 'Item' && promotionItems.DiscountType !== 'Receipt') {
         throw new BadRequestException('Invalid Discount Type')
       }
@@ -137,10 +134,9 @@ export class GinesysService {
           DiscountType: promotionItems.DiscountType, 
           DiscountAmount: promotionItems.DiscountAmount,
           CouponCode: promotionItems.CouponCode,
-      };
-      transformedPromotion.push(transformedItem);
-    }
-      else if (promotionItems.DiscountType === 'Item') {
+        };
+        return transformedItem;
+      } else if (promotionItems.DiscountType === 'Item') {
         const transformedItem: ItemPromotionDTO = { 
           DiscountType: promotionItems.DiscountType,
           ItemCode: promotionItems.ItemCode, 
@@ -149,11 +145,10 @@ export class GinesysService {
           CouponCode: promotionItems.CouponCode,
           RewardRatio: promotionItems.RewardRatio,
         };
-        transformedPromotion.push(transformedItem);
+        return transformedItem;
       }
-    }
-    return transformedPromotion;
-    }
+    });
+  }
 
   // private function to validate the data
   private posBillValidation(posbillData: PosBillRequestDTO) {
