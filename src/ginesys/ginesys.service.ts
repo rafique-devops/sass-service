@@ -8,17 +8,12 @@ import {
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { AxiosResponse } from 'axios';
-import { lastValueFrom } from 'rxjs';
+import { async, lastValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { CreateGinesysDto } from './dto/create-ginesys.dto';
 import {
   ItemPromotionDTO,
-  OptcultureDetailsDTO,
-  PosBillRequestDTO,
-  PosBillResponse,
-  PromotionDTO,
-  ReceiptPromotionDTO,
-  UserDTO,
+  PosBillRequestDTO, PromotionDTO, ReceiptPromotionDTO,
 } from './dto/posbillRequest.dto';
 
 export interface GinesysCreationResponse {
@@ -130,43 +125,59 @@ export class GinesysService {
   //POS-BILL Section starts from here
   //private function to transform the json
   private transformDataToItemPromotionDto(
-    promotions: PromotionDTO,
-  ): ItemPromotionDTO | ReceiptPromotionDTO {
-    if (promotions.DiscountType !== 'Item' && promotions.DiscountType !== 'Receipt') {
-      throw new BadRequestException('Invalid Discount Type');
+    promotionItem: PromotionDTO[],
+  ): (ItemPromotionDTO | ReceiptPromotionDTO)[] {
+    const transformedPromotion = [];
+    for (const promotionItems of promotionItem) {
+      if (promotionItems.DiscountType !== 'Item' && promotionItems.DiscountType !== 'Receipt') {
+        throw new BadRequestException('Invalid Discount Type')
+      }
+      if (promotionItems.DiscountType === 'Receipt') {
+        const transformedItem: ReceiptPromotionDTO = {
+          DiscountType: promotionItems.DiscountType, 
+          DiscountAmount: promotionItems.DiscountAmount,
+          CouponCode: promotionItems.CouponCode,
+      };
+      transformedPromotion.push(transformedItem);
     }
-    if (promotions.DiscountType === 'Item' && (!promotions.ItemCode || !promotions.ItemDiscount || !promotions.QuantityDiscounted || !promotions.CouponCode || !promotions.DiscountAmount)) {
-      throw new BadRequestException('Invalid Promotion For Item Type');
+      else if (promotionItems.DiscountType === 'Item') {
+        const transformedItem: ItemPromotionDTO = { 
+          DiscountType: promotionItems.DiscountType,
+          ItemCode: promotionItems.ItemCode, 
+          ItemDiscount: promotionItems.ItemDiscount,
+          QuantityDiscounted: promotionItems.QuantityDiscounted,
+          CouponCode: promotionItems.CouponCode,
+          RewardRatio: promotionItems.RewardRatio,
+        };
+        transformedPromotion.push(transformedItem);
+      }
     }
-    if (promotions.DiscountType === 'Receipt' && (!promotions.CouponCode || !promotions.DiscountAmount)) {
-      throw new BadRequestException('Invalid Promotion For Receipt Type');
+    return transformedPromotion;
     }
-    return promotions.DiscountType === 'Item' ? promotions as ItemPromotionDTO : promotions as ReceiptPromotionDTO;
-  }
 
   // private function to validate the data
   private posBillValidation(posbillData: PosBillRequestDTO) {
     const { userName, token, organizationId } = posbillData.user;
-    const { MembershipNumber, Phone, Email } = posbillData.OptcultureDetails;
+    const { MembershipNumber, Phone, Email, Promotions } = posbillData.OptcultureDetails;
 
     if (!userName || !token || !organizationId) {
       throw new HttpException('Incorrect user details', HttpStatus.BAD_REQUEST);
-    } else if (!MembershipNumber || !Phone || !Email) {
+    } else if (!MembershipNumber || !Phone || !Email || !Promotions) {
       throw new HttpException(
         'Membership details are mandatory',
         HttpStatus.BAD_REQUEST,
       );
     }
-
-    posbillData.OptcultureDetails.Promotions.forEach(promotion => {
-      this.transformDataToItemPromotionDto(promotion);
-    })
   }
 
   async posBill(posbillData: PosBillRequestDTO): Promise<any> {
     try {
+      
       this.posBillValidation(posbillData);
-      Logger.log('Response Data', JSON.stringify(posbillData, null, 2));
+      const transformPromotion = this.transformDataToItemPromotionDto(posbillData.OptcultureDetails.Promotions);
+      
+      posbillData.OptcultureDetails.Promotions = transformPromotion;
+      
       return {
         success: true,
         data: posbillData,

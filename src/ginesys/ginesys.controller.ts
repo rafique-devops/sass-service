@@ -80,9 +80,11 @@ export class GinesysController {
 
   @Post('/pos-bill')
   @HttpCode(HttpStatus.OK)
-  async posBill(@Body() posbillData: PosBillRequestDTO) {
+  async posBill(@Body() posbillData: PosBillRequestDTO): Promise<any> {
     try {
+      
       const processedData = await this.ginesysService.posBill(posbillData);
+      
       return processedData;
     } catch (error) {
       if (error instanceof HttpException) {
