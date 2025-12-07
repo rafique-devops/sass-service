@@ -8,32 +8,16 @@ import {
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { AxiosResponse } from 'axios';
-import { async, lastValueFrom } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { CreateGinesysDto } from './dto/create-ginesys.dto';
 import {
   ItemPromotionDTO,
-  PosBillRequestDTO, PromotionDTO, ReceiptPromotionDTO,
+  PosBillRequestDTO,
+  PromotionDTO,
+  ReceiptPromotionDTO,
 } from './dto/posbillRequest.dto';
-
-export interface GinesysCreationResponse {
-  data: {
-    checkerId: number;
-  };
-  message: {
-    statusCode: number;
-    messageText: string;
-  };
-}
-
-// export interface PosBillResponse {
-//   success: true;
-//   user: UserDTO;
-//   requestTimestamp: string;
-//   requestType: string;
-//   receiptType: string[];
-//   optcultureDetails: OptcultureDetailsDTO;
-// }
+import { GinesysCreationResponse } from './ginesys.interfaces';
 
 @Injectable()
 export class GinesysService {
@@ -47,10 +31,7 @@ export class GinesysService {
     );
   }
 
-  private prepareRequest(
-    endpoint: string,
-    data?: any,
-  ): {
+  private prepareRequest(endpoint: string): {
     url: string;
     headers: { Authorization: string; 'Content-Type': string };
   } {
@@ -76,10 +57,7 @@ export class GinesysService {
     createGinesysDto: CreateGinesysDto,
   ): Promise<GinesysCreationResponse> {
     try {
-      const { url, headers } = this.prepareRequest(
-        'v2/createmodifyitembulk',
-        createGinesysDto,
-      );
+      const { url, headers } = this.prepareRequest('v2/createmodifyitembulk');
       const response: AxiosResponse = await lastValueFrom(
         this.httpService.post(url, createGinesysDto, { headers }),
       );
@@ -108,7 +86,7 @@ export class GinesysService {
 
   async checkUpdate(checkerId: number): Promise<any> {
     try {
-      const { url, headers } = this.prepareRequest('v1/checker', checkerId);
+      const { url, headers } = this.prepareRequest('v1/checker');
       const response: AxiosResponse = await lastValueFrom(
         this.httpService.post(url, { checkerId }, { headers }),
       );
@@ -125,21 +103,24 @@ export class GinesysService {
   private transformDataToItemPromotionDto(
     promotionItem: PromotionDTO[],
   ): (ItemPromotionDTO | ReceiptPromotionDTO)[] {
-    return promotionItem.map(promotionItems => {
-      if (promotionItems.DiscountType !== 'Item' && promotionItems.DiscountType !== 'Receipt') {
-        throw new BadRequestException('Invalid Discount Type')
+    return promotionItem.map((promotionItems) => {
+      if (
+        promotionItems.DiscountType !== 'Item' &&
+        promotionItems.DiscountType !== 'Receipt'
+      ) {
+        throw new BadRequestException('Invalid Discount Type');
       }
       if (promotionItems.DiscountType === 'Receipt') {
         const transformedItem: ReceiptPromotionDTO = {
-          DiscountType: promotionItems.DiscountType, 
+          DiscountType: promotionItems.DiscountType,
           DiscountAmount: promotionItems.DiscountAmount,
           CouponCode: promotionItems.CouponCode,
         };
         return transformedItem;
       } else if (promotionItems.DiscountType === 'Item') {
-        const transformedItem: ItemPromotionDTO = { 
+        const transformedItem: ItemPromotionDTO = {
           DiscountType: promotionItems.DiscountType,
-          ItemCode: promotionItems.ItemCode, 
+          ItemCode: promotionItems.ItemCode,
           ItemDiscount: promotionItems.ItemDiscount,
           QuantityDiscounted: promotionItems.QuantityDiscounted,
           CouponCode: promotionItems.CouponCode,
@@ -153,7 +134,8 @@ export class GinesysService {
   // private function to validate the data
   private posBillValidation(posbillData: PosBillRequestDTO) {
     const { userName, token, organizationId } = posbillData.user;
-    const { MembershipNumber, Phone, Email, Promotions } = posbillData.OptcultureDetails;
+    const { MembershipNumber, Phone, Email, Promotions } =
+      posbillData.OptcultureDetails;
 
     if (!userName || !token || !organizationId) {
       throw new HttpException('Incorrect user details', HttpStatus.BAD_REQUEST);
@@ -167,18 +149,19 @@ export class GinesysService {
 
   async posBill(posbillData: PosBillRequestDTO): Promise<any> {
     try {
-      
       this.posBillValidation(posbillData);
-      const transformPromotion = this.transformDataToItemPromotionDto(posbillData.OptcultureDetails.Promotions);
-      
+      const transformPromotion = this.transformDataToItemPromotionDto(
+        posbillData.OptcultureDetails.Promotions,
+      );
+
       posbillData.OptcultureDetails.Promotions = transformPromotion;
-      
+
       return {
         success: true,
         data: posbillData,
       };
     } catch (error) {
-      Logger.log(`Failed Processing at pos-bill: ${error}`,error.stack)
+      Logger.log(`Failed Processing at pos-bill: ${error}`, error.stack);
       throw new HttpException(`${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }

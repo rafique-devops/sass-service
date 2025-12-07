@@ -4,7 +4,7 @@ import { UpdateOptcultureDto } from './dto/update-optculture.dto';
 
 @Injectable()
 export class OptcultureService {
-  create(createOptcultureDto: CreateOptcultureDto) {
+  create(_createOptcultureDto: CreateOptcultureDto) {
     return 'This action adds a new optculture';
   }
 
@@ -16,7 +16,7 @@ export class OptcultureService {
     return `This action returns a #${id} optculture`;
   }
 
-  update(id: number, updateOptcultureDto: UpdateOptcultureDto) {
+  update(id: number, _updateOptcultureDto: UpdateOptcultureDto) {
     return `This action updates a #${id} optculture`;
   }
 

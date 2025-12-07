@@ -1,4 +1,4 @@
-interface GinesysCreationResponse {
+export interface GinesysCreationResponse {
   data: {
     checkerId: number;
   };
