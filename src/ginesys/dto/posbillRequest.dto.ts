@@ -1,43 +1,43 @@
 export class UserDTO {
-    userName: string;
-    organizationId: string;
-    token: string
+  userName: string;
+  organizationId: string;
+  token: string;
 }
 
 export class ItemPromotionDTO {
-    DiscountType: 'Item';
-    ItemCode?: string;
-    ItemDiscount?: string;
-    QuantityDiscounted?: string;
-    CouponCode?: string;
-    RewardRatio?: string;
+  DiscountType: 'Item';
+  ItemCode?: string;
+  ItemDiscount?: string;
+  QuantityDiscounted?: string;
+  CouponCode?: string;
+  RewardRatio?: string;
 }
 
 export class ReceiptPromotionDTO {
-    DiscountType: 'Receipt';
-    DiscountAmount?: string;
-    CouponCode?: string;
+  DiscountType: 'Receipt';
+  DiscountAmount?: string;
+  CouponCode?: string;
 }
 
 export type PromotionDTO = ItemPromotionDTO | ReceiptPromotionDTO;
 
 export class LoyaltyRedeemDTO {
-    DiscountAmount?: string;
+  DiscountAmount?: string;
 }
 
 export class OptcultureDetailsDTO {
-    MembershipNumber: string;
-    Email: string;
-    Phone: string;
-    LoyaltyRedeem?: LoyaltyRedeemDTO; 
-    LoyaltyRedeemReversal?: string;
-    Promotions: PromotionDTO[];
+  MembershipNumber: string;
+  Email: string;
+  Phone: string;
+  LoyaltyRedeem?: LoyaltyRedeemDTO;
+  LoyaltyRedeemReversal?: string;
+  Promotions: PromotionDTO[];
 }
 
-  export class PosBillRequestDTO {
-    user: UserDTO;
-    requestTimestamp: string;
-    requestType: string;
-    receiptType: string;
-    OptcultureDetails: OptcultureDetailsDTO;
+export class PosBillRequestDTO {
+  user: UserDTO;
+  requestTimestamp: string;
+  requestType: string;
+  receiptType: string;
+  OptcultureDetails: OptcultureDetailsDTO;
 }

@@ -26,7 +26,8 @@ export class GinesysController {
         await this.ginesysService.createModifyItems(inputData);
       Logger.log(
         'Creation Response',
-        JSON.stringify(creationResponse, null, 2));      
+        JSON.stringify(creationResponse, null, 2),
+      );
       return creationResponse;
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -76,15 +77,14 @@ export class GinesysController {
     return jsonData;
   }
 
-// ... imports
+  // ... imports
 
   @Post('/pos-bill')
   @HttpCode(HttpStatus.OK)
   async posBill(@Body() posbillData: PosBillRequestDTO): Promise<any> {
     try {
-      
       const processedData = await this.ginesysService.posBill(posbillData);
-      
+
       return processedData;
     } catch (error) {
       if (error instanceof HttpException) {

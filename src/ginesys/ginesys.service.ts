@@ -13,7 +13,9 @@ import { ConfigService } from '@nestjs/config';
 import { CreateGinesysDto } from './dto/create-ginesys.dto';
 import {
   ItemPromotionDTO,
-  PosBillRequestDTO, PromotionDTO, ReceiptPromotionDTO,
+  PosBillRequestDTO,
+  PromotionDTO,
+  ReceiptPromotionDTO,
 } from './dto/posbillRequest.dto';
 
 export interface GinesysCreationResponse {
@@ -125,21 +127,24 @@ export class GinesysService {
   private transformDataToItemPromotionDto(
     promotionItem: PromotionDTO[],
   ): (ItemPromotionDTO | ReceiptPromotionDTO)[] {
-    return promotionItem.map(promotionItems => {
-      if (promotionItems.DiscountType !== 'Item' && promotionItems.DiscountType !== 'Receipt') {
-        throw new BadRequestException('Invalid Discount Type')
+    return promotionItem.map((promotionItems) => {
+      if (
+        promotionItems.DiscountType !== 'Item' &&
+        promotionItems.DiscountType !== 'Receipt'
+      ) {
+        throw new BadRequestException('Invalid Discount Type');
       }
       if (promotionItems.DiscountType === 'Receipt') {
         const transformedItem: ReceiptPromotionDTO = {
-          DiscountType: promotionItems.DiscountType, 
+          DiscountType: promotionItems.DiscountType,
           DiscountAmount: promotionItems.DiscountAmount,
           CouponCode: promotionItems.CouponCode,
         };
         return transformedItem;
       } else if (promotionItems.DiscountType === 'Item') {
-        const transformedItem: ItemPromotionDTO = { 
+        const transformedItem: ItemPromotionDTO = {
           DiscountType: promotionItems.DiscountType,
-          ItemCode: promotionItems.ItemCode, 
+          ItemCode: promotionItems.ItemCode,
           ItemDiscount: promotionItems.ItemDiscount,
           QuantityDiscounted: promotionItems.QuantityDiscounted,
           CouponCode: promotionItems.CouponCode,
@@ -153,7 +158,8 @@ export class GinesysService {
   // private function to validate the data
   private posBillValidation(posbillData: PosBillRequestDTO) {
     const { userName, token, organizationId } = posbillData.user;
-    const { MembershipNumber, Phone, Email, Promotions } = posbillData.OptcultureDetails;
+    const { MembershipNumber, Phone, Email, Promotions } =
+      posbillData.OptcultureDetails;
 
     if (!userName || !token || !organizationId) {
       throw new HttpException('Incorrect user details', HttpStatus.BAD_REQUEST);
@@ -167,18 +173,19 @@ export class GinesysService {
 
   async posBill(posbillData: PosBillRequestDTO): Promise<any> {
     try {
-      
       this.posBillValidation(posbillData);
-      const transformPromotion = this.transformDataToItemPromotionDto(posbillData.OptcultureDetails.Promotions);
-      
+      const transformPromotion = this.transformDataToItemPromotionDto(
+        posbillData.OptcultureDetails.Promotions,
+      );
+
       posbillData.OptcultureDetails.Promotions = transformPromotion;
-      
+
       return {
         success: true,
         data: posbillData,
       };
     } catch (error) {
-      Logger.log(`Failed Processing at pos-bill: ${error}`,error.stack)
+      Logger.log(`Failed Processing at pos-bill: ${error}`, error.stack);
       throw new HttpException(`${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
