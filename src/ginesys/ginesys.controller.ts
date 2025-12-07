@@ -6,15 +6,30 @@ import {
   HttpStatus,
   HttpException,
   Logger,
-  BadRequestException,
 } from '@nestjs/common';
 import { GinesysService } from './ginesys.service';
 import { CreateGinesysDto } from './dto/create-ginesys.dto';
 import { PosBillRequestDTO } from './dto/posbillRequest.dto';
+import { GinesysCreationResponse } from './ginesys.interfaces';
 
 @Controller('ginesys')
 export class GinesysController {
   constructor(private readonly ginesysService: GinesysService) {}
+
+  /**
+   * Handles errors by throwing appropriate HttpException
+   * @param error - The error to handle
+   * @param defaultMessage - Default message if error is not an Error instance
+   */
+  private handleError(error: unknown, defaultMessage: string): never {
+    if (error instanceof HttpException) {
+      throw error;
+    }
+    if (error instanceof Error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    throw new HttpException(defaultMessage, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
 
   @Post('/item-master')
   @HttpCode(HttpStatus.OK)
@@ -30,16 +45,7 @@ export class GinesysController {
       );
       return creationResponse;
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new HttpException(
-          error.message,
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
-      throw new HttpException(
-        'Failed to process data',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      this.handleError(error, 'Failed to process data');
     }
   }
 
@@ -52,16 +58,7 @@ export class GinesysController {
       );
       return checkResponse;
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new HttpException(
-          error.message,
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
-      throw new HttpException(
-        'Failed to fetch update',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      this.handleError(error, 'Failed to fetch update');
     }
   }
 
@@ -77,8 +74,6 @@ export class GinesysController {
     return jsonData;
   }
 
-  // ... imports
-
   @Post('/pos-bill')
   @HttpCode(HttpStatus.OK)
   async posBill(@Body() posbillData: PosBillRequestDTO): Promise<any> {
@@ -87,11 +82,7 @@ export class GinesysController {
 
       return processedData;
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw error; // Rethrow HttpExceptions directly
-      } else {
-        throw new HttpException('Failure', HttpStatus.INTERNAL_SERVER_ERROR);
-      }
+      this.handleError(error, 'Failure');
     }
   }
 }
